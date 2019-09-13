@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    </head>
+    <body>
+
+        <div id="list"></div>
+
+        <script type="text/babel">
+            function array_move(arr, old_index, new_index) {
+                if (new_index >= arr.length) {
+                    var k = new_index - arr.length + 1;
+                    while (k--) {
+                        arr.push(undefined);
+                    }
+                }
+                arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+                return arr; // for testing
+            };
+            
+            const DragHandle = SortableHOC.sortableHandle(() => <span>[[::]]</span>);
+            
+            const SortableItem = SortableHOC.SortableElement(({item}) => (
+                <div className="row">
+                    <div className="col-5">{item.name}</div>
+                    <div className="col-3">{item.number_plate}</div>
+                    <div className="col-1">{item.active ? 'yes':'no'}</div>
+                    <div className="col-2"><DragHandle /></div>
+                </div>
+            ));
+            //<div className="row">{value}<DragHandle /></div>));
+
+            const SortableList = SortableHOC.SortableContainer(({items}) => {
+                return (
+                    <div>
+                        {items.map((item, index) => (
+                            <SortableItem key={`item-${item.id}`} index={index} item={item} />
+                        ))}
+                    </div>
+                );
+            });
+
+
+            function PaginationElement(props){
+                let link;
+                const handleClick = props.handleClick || function(){};
+                if(props.active){
+                    link = <span className="page-link">{props.number}<span className="sr-only">(current)</span></span>;
+                }else{
+                    link = <a className="page-link" href="#" onClick={handleClick.bind(this, props.number)}>{props.number}</a>;
+                }
+                return (
+                    <li className={"page-item" + (props.active ? " active":"")}>
+                        {link}
+                    </li>
+                );
+            }
+
+            function PaginationList(props){
+                const currentPage = props.currentPage;
+                const lenghtItems = props.lenghtItems;
+                const pageCount = props.pageCount;
+
+                const lengthPages = Math.ceil(lenghtItems/pageCount);
+
+                let elements = [];
+                for(let i = 1; i <= lengthPages; i++){
+                    elements.push(<PaginationElement key={`item-${i}`} number={i} active={currentPage==i} handleClick={props.handleClick}/>);
+                }
+                return (
+                    <nav aria-label="...">
+                        <ul className="pagination pagination-sm">
+                            {elements}
+                        </ul>
+                    </nav>
+                )
+            }
+
+
+            class SortableComponent extends React.Component {
+                state = {
+                    pageCount: 4,
+                    currentPage: 1,
+                    items: [
+                        {
+                            id: 1,
+                            name: "Nazwa pojazdu 1",
+                            number_plate: "W1 1111",
+                            active: true,
+                            order: 1
+                        },
+                        {
+                            id: 2,
+                            name: "Nazwa pojazdu 2",
+                            number_plate: "W1 1111",
+                            active: true,
+                            order: 2
+                        },
+                        {
+                            id: 3,
+                            name: "Nazwa pojazdu 3",
+                            number_plate: "W1 1111",
+                            active: true,
+                            order: 3
+                        },
+                        {
+                            id: 4,
+                            name: "Nazwa pojazdu 4",
+                            number_plate: "W1 1111",
+                            active: true,
+                            order: 4
+                        },
+                        {
+                            id: 5,
+                            name: "Nazwa pojazdu 5",
+                            number_plate: "W1 1111",
+                            active: true,
+                            order: 5
+                        },
+                        {
+                            id: 6,
+                            name: "Nazwa pojazdu 6",
+                            number_plate: "W1 1111",
+                            active: true,
+                            order: 6
+                        }
+                    ]
+                };
+                onSortEnd = ({oldIndex, newIndex}) => {
+                    this.setState((state) => {
+                        oldIndex = oldIndex + ((state.currentPage - 1) * state.pageCount);
+                        newIndex = newIndex + ((state.currentPage - 1) * state.pageCount);
+                        console.log(oldIndex, newIndex);
+
+                        var newItems = array_move([...state.items], oldIndex, newIndex);
+                        newItems.forEach((element, index) => {
+                            newItems[index]["order"] = index;
+                        });
+                        return {items: newItems};
+                    });
+                    console.log(this.state);
+                };
+                handleClick = (pageNumber) => {
+                    this.setState({
+                        currentPage: Number(pageNumber)
+                    });
+                    //console.log(pageNumber);
+                };
+                getActualPageItems = () => {
+                    const start = (this.state.pageCount * (this.state.currentPage-1));
+                    const end = (this.state.pageCount * this.state.currentPage);
+                    //console.log(start, end);
+                    return this.state.items.slice(start, end);
+                }
+                render() {
+                    return (
+                        <div className="container">
+                            <SortableList items={this.getActualPageItems()} onSortEnd={this.onSortEnd} useDragHandle/>
+                            <PaginationList 
+                                currentPage={this.state.currentPage}
+                                lenghtItems={this.state.items.length}
+                                pageCount={this.state.pageCount}
+                                handleClick={this.handleClick}
+                            />
+                        </div>
+                    );
+                }
+            }
+
+            ReactDOM.render(<SortableComponent />, document.getElementById('list'));
+        </script>
+
+
+
+        <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+        <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+        <script src="https://unpkg.com/react@16.9/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16.9.0/umd/react-dom.development.js"></script>
+        <script src="https://unpkg.com/react-sortable-hoc@1.10.1/dist/react-sortable-hoc.umd.js"></script>
+
+
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    
+    </body>
+</html>
