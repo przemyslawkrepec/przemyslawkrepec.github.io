@@ -70,7 +70,7 @@ var AppComponent = /** @class */ (function () {
             { key: 2, text: 'Device 2', color: 'orange' },
         ];
         for (var i = 3; i < 10000; i++) {
-            blocks.push({ key: i, text: 'Volvo Vancouver', color: 'lightgreen' });
+            blocks.push({ key: i, text: 'Device ' + i, color: 'lightgreen' });
         }
         console.log(blocks);
         var links = [
